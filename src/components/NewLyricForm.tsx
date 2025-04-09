@@ -1,62 +1,65 @@
-import React, { useState, useEffect } from "react";
+
+import React, { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { addLyric, validatePassword } from "@/lib/localStorage";
+import { addLyric, isPasswordVerified } from "@/lib/localStorage";
 import { DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { LockKeyhole, Plus } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface NewLyricFormProps {
   onLyricAdded: () => void;
 }
 
-const PASSWORD_VERIFIED_KEY = "lyric-password-verified";
-
 const NewLyricForm: React.FC<NewLyricFormProps> = ({ onLyricAdded }) => {
   const { toast } = useToast();
+  const { user, isAuthenticated } = useAuth();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [author, setAuthor] = useState("");
   const [password, setPassword] = useState("");
-  const [isPasswordVerified, setIsPasswordVerified] = useState(false);
   const [passwordError, setPasswordError] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-
-  useEffect(() => {
-    const verifiedState = localStorage.getItem(PASSWORD_VERIFIED_KEY);
-    if (verifiedState === "true") {
-      setIsPasswordVerified(true);
-    }
-  }, []);
-
-  const verifyPassword = () => {
-    if (validatePassword(password)) {
-      setIsPasswordVerified(true);
-      setPasswordError("");
-      localStorage.setItem(PASSWORD_VERIFIED_KEY, "true");
-    } else {
-      setPasswordError("Incorrect password. Please try again.");
-    }
-  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!title.trim() || !content.trim() || !author.trim()) {
+    if (!isAuthenticated) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to add lyrics",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!title.trim() || !content.trim()) {
       toast({
         title: "Missing information",
-        description: "Please fill in all fields",
+        description: "Please fill in all required fields",
         variant: "destructive",
       });
       return;
     }
     
     try {
-      addLyric({ title, content, author });
+      // Use user's display name if available, otherwise fall back to manual author input
+      const authorName = user?.displayName || author || user?.username || "Anonymous";
+      
+      addLyric(
+        { 
+          title, 
+          content, 
+          author: authorName,
+          authorDisplayName: user?.displayName, 
+          userId: user?.id || "anonymous"
+        }, 
+        user?.id || "anonymous"
+      );
       
       toast({
         title: "Lyrics added!",
@@ -98,36 +101,24 @@ const NewLyricForm: React.FC<NewLyricFormProps> = ({ onLyricAdded }) => {
       </DialogTrigger>
 
       <DialogContent className="sm:max-w-[500px]">
-        {!isPasswordVerified ? (
+        {!isAuthenticated && !isPasswordVerified() ? (
           <>
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <LockKeyhole size={18} />
-                Password Required
+                Authentication Required
               </DialogTitle>
               <DialogDescription>
-                You need a password to add new lyrics to the collection.
+                You need to log in to add new lyrics to the collection.
               </DialogDescription>
             </DialogHeader>
             
-            <div className="py-4">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter the site password"
-                className="mt-1"
-              />
-              {passwordError && (
-                <p className="text-destructive text-sm mt-1">{passwordError}</p>
-              )}
+            <div className="py-4 text-center">
+              <p className="mb-4">Please log in to your account to continue.</p>
+              <Button onClick={() => setIsDialogOpen(false)}>
+                Close
+              </Button>
             </div>
-            
-            <DialogFooter>
-              <Button onClick={verifyPassword}>Verify Password</Button>
-            </DialogFooter>
           </>
         ) : (
           <form onSubmit={handleSubmit}>
@@ -163,17 +154,18 @@ const NewLyricForm: React.FC<NewLyricFormProps> = ({ onLyricAdded }) => {
                 />
               </div>
               
-              <div className="grid gap-2">
-                <Label htmlFor="author">Your Name</Label>
-                <Input
-                  id="author"
-                  value={author}
-                  onChange={(e) => setAuthor(e.target.value)}
-                  placeholder="Enter your name"
-                  maxLength={50}
-                  required
-                />
-              </div>
+              {!user?.displayName && (
+                <div className="grid gap-2">
+                  <Label htmlFor="author">Your Name</Label>
+                  <Input
+                    id="author"
+                    value={author}
+                    onChange={(e) => setAuthor(e.target.value)}
+                    placeholder="Enter your name"
+                    maxLength={50}
+                  />
+                </div>
+              )}
             </div>
             
             <DialogFooter>
