@@ -97,8 +97,15 @@
 
 /* Custom styles */
 .lyric-card {
-  @apply relative p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300;
+  @apply relative rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300;
   background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--accent)/0.3) 100%);
+  transform: translateY(0);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.lyric-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
 }
 
 .music-note-bg {
@@ -110,6 +117,46 @@
 }
 
 .page-gradient {
-  background: linear-gradient(to bottom, hsl(var(--background)), hsl(var(--accent)/0.2));
+  background: linear-gradient(to bottom, hsl(var(--background)), hsl(var(--accent)/0.3));
   min-height: 100vh;
+}
+
+/* Animation for the add button */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(139, 92, 246, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(139, 92, 246, 0);
+  }
+}
+
+.add-button {
+  animation: pulse 2s infinite;
+}
+
+/* Dialog styling enhancements */
+.lyric-dialog {
+  @apply backdrop-blur-sm;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--background));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--primary)/0.5);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary));
 }

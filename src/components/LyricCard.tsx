@@ -47,7 +47,7 @@ const LyricCard: React.FC<LyricCardProps> = ({ lyric }) => {
         </CardFooter>
       </Card>
 
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <Dialog open={isOpen} onOpenChange={setIsOpen} className="lyric-dialog">
         <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-2xl md:text-3xl">{lyric.title}</DialogTitle>

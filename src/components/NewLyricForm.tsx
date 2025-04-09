@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,6 +14,8 @@ interface NewLyricFormProps {
   onLyricAdded: () => void;
 }
 
+const PASSWORD_VERIFIED_KEY = "lyric-password-verified";
+
 const NewLyricForm: React.FC<NewLyricFormProps> = ({ onLyricAdded }) => {
   const { toast } = useToast();
   const [title, setTitle] = useState("");
@@ -23,11 +24,20 @@ const NewLyricForm: React.FC<NewLyricFormProps> = ({ onLyricAdded }) => {
   const [password, setPassword] = useState("");
   const [isPasswordVerified, setIsPasswordVerified] = useState(false);
   const [passwordError, setPasswordError] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  useEffect(() => {
+    const verifiedState = localStorage.getItem(PASSWORD_VERIFIED_KEY);
+    if (verifiedState === "true") {
+      setIsPasswordVerified(true);
+    }
+  }, []);
 
   const verifyPassword = () => {
     if (validatePassword(password)) {
       setIsPasswordVerified(true);
       setPasswordError("");
+      localStorage.setItem(PASSWORD_VERIFIED_KEY, "true");
     } else {
       setPasswordError("Incorrect password. Please try again.");
     }
@@ -53,15 +63,12 @@ const NewLyricForm: React.FC<NewLyricFormProps> = ({ onLyricAdded }) => {
         description: "Your lyrics have been successfully added",
       });
       
-      // Reset form
       setTitle("");
       setContent("");
       setAuthor("");
-      setIsPasswordVerified(false);
-      setPassword("");
       
-      // Notify parent component
       onLyricAdded();
+      setIsDialogOpen(false);
     } catch (error) {
       toast({
         title: "Error",
@@ -71,10 +78,21 @@ const NewLyricForm: React.FC<NewLyricFormProps> = ({ onLyricAdded }) => {
     }
   };
 
+  const handleOpenChange = (open: boolean) => {
+    setIsDialogOpen(open);
+    if (!open) {
+      setTitle("");
+      setContent("");
+      setAuthor("");
+      setPassword("");
+      setPasswordError("");
+    }
+  };
+
   return (
-    <Dialog>
+    <Dialog open={isDialogOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button className="fixed bottom-4 right-4 rounded-full w-14 h-14 shadow-lg z-10">
+        <Button className="fixed bottom-4 right-4 rounded-full w-14 h-14 shadow-lg z-10 add-button">
           <Plus size={24} />
         </Button>
       </DialogTrigger>
