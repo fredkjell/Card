@@ -28,6 +28,7 @@ const Index = () => {
         </div>
         <p className="text-center text-muted-foreground max-w-2xl mx-auto">
           Create and share your song lyrics with the world. Add your own creative lyrics by clicking the + button.
+          <span className="block mt-1 text-sm text-primary">Click on any card to view the full lyrics!</span>
         </p>
       </header>
 
