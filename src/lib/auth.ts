@@ -82,20 +82,11 @@ export const registerUser = (
 ): User | null => {
   const users = getUsers();
   
-  // Check if username or email already exists
+  // Check if username already exists
   if (users.some(u => u.username === username)) {
     toast({
       title: "Registration failed",
       description: "Username already exists",
-      variant: "destructive"
-    });
-    return null;
-  }
-  
-  if (users.some(u => u.email === email)) {
-    toast({
-      title: "Registration failed",
-      description: "Email already in use",
       variant: "destructive"
     });
     return null;
@@ -106,7 +97,7 @@ export const registerUser = (
     id: Date.now().toString(),
     username,
     displayName,
-    email,
+    email: email || "", // Default to empty string if email is not provided
     isAdmin: false, // Default to non-admin
     createdAt: new Date().toISOString()
   };

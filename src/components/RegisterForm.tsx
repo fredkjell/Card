@@ -17,7 +17,6 @@ interface RegisterFormProps {
 const RegisterForm: React.FC<RegisterFormProps> = ({ isOpen, onOpenChange, onLoginClick }) => {
   const [username, setUsername] = useState('');
   const [displayName, setDisplayName] = useState('');
-  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -27,10 +26,10 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ isOpen, onOpenChange, onLog
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!username.trim() || !displayName.trim() || !email.trim() || !password.trim()) {
+    if (!username.trim() || !displayName.trim() || !password.trim()) {
       toast({
         title: "Error",
-        description: "Please fill in all fields",
+        description: "Please fill in all required fields",
         variant: "destructive",
       });
       return;
@@ -48,12 +47,12 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ isOpen, onOpenChange, onLog
     setIsLoading(true);
     
     try {
-      const success = await register(username, displayName, email, password);
+      // Use an empty string as default email
+      const success = await register(username, displayName, "", password);
       if (success) {
         onOpenChange(false);
         setUsername('');
         setDisplayName('');
-        setEmail('');
         setPassword('');
         setConfirmPassword('');
       }
@@ -101,18 +100,6 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ isOpen, onOpenChange, onLog
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               placeholder="Your display name"
-              disabled={isLoading}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Your email address"
               disabled={isLoading}
             />
           </div>

@@ -8,7 +8,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
-import { User, Shield, ShieldCheck, ShieldX, Trash2, UserCog } from 'lucide-react';
+import { User, Shield, ShieldCheck, ShieldX, Trash2, UserCog, RefreshCw } from 'lucide-react';
 import { User as UserType, getUsers, toggleUserAdminStatus, validateAdminPassword, deleteUser } from '@/lib/auth';
 
 interface AdminPanelProps {
@@ -23,7 +23,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onOpenChange }) => {
   const [adminPasswordError, setAdminPasswordError] = useState('');
   const [isVerifyDialogOpen, setIsVerifyDialogOpen] = useState(false);
   const [showConfirmDelete, setShowConfirmDelete] = useState<string | null>(null);
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -31,6 +31,13 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onOpenChange }) => {
       loadUsers();
     }
   }, [isOpen]);
+
+  // Check if user is admin when the component mounts or updates
+  useEffect(() => {
+    if (user?.isAdmin) {
+      setIsPasswordVerified(true);
+    }
+  }, [user]);
 
   const loadUsers = () => {
     setUsers(getUsers());
@@ -49,10 +56,25 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onOpenChange }) => {
   const handleToggleAdmin = (userId: string) => {
     if (toggleUserAdminStatus(userId)) {
       loadUsers();
-      toast({
-        title: "Success",
-        description: "User admin status updated",
-      });
+      
+      // If we're toggling our own admin status, show an appropriate message
+      if (userId === user?.id) {
+        const updatedUsers = getUsers();
+        const updatedUser = updatedUsers.find(u => u.id === userId);
+        if (updatedUser) {
+          toast({
+            title: updatedUser.isAdmin ? "Admin status granted" : "Admin status removed",
+            description: updatedUser.isAdmin 
+              ? "You now have admin privileges" 
+              : "Your admin privileges have been removed",
+          });
+        }
+      } else {
+        toast({
+          title: "Success",
+          description: "User admin status updated",
+        });
+      }
     } else {
       toast({
         title: "Error",
@@ -84,7 +106,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onOpenChange }) => {
     if (!open) {
       setAdminPassword('');
       setAdminPasswordError('');
-      setIsPasswordVerified(false);
+      // Don't reset isPasswordVerified here to maintain admin status
     }
   };
 
@@ -115,7 +137,18 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onOpenChange }) => {
             <div className="mt-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-medium">Users</h3>
-                <p className="text-sm text-muted-foreground">{users.length} total</p>
+                <div className="flex items-center gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={loadUsers}
+                    className="h-8 gap-1"
+                  >
+                    <RefreshCw size={14} />
+                    <span>Refresh</span>
+                  </Button>
+                  <p className="text-sm text-muted-foreground">{users.length} total</p>
+                </div>
               </div>
 
               <div className="border rounded-md">
